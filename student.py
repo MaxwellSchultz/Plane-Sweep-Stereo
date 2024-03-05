@@ -99,7 +99,7 @@ def unproject_corners_impl(K, width, height, depth, Rt):
             
             out_corners[h,w,0] = curr_vec[0]
             out_corners[h,w,1] = curr_vec[1]
-            out_corners[h,w,2] = curr_vec[1]
+            out_corners[h,w,2] = curr_vec[2]
             
     return out_corners
 
@@ -181,7 +181,13 @@ def preprocess_ncc_impl(image, ncc_size):
     # For each patch, subtract out its per-channel mean
     # Then divide the patch by its (not-per-channel) vector norm.
     # Patches with norm < 1e-6 should become all zeros.
-    raise NotImplementedError()
+    normalized = normalized.reshape(h, w, c, -1)
+    normalized = normalized - np.mean(normalized, axis=3, keepdims=True)
+    normalized = normalized.reshape(h, w, -1)
+    norm = np.linalg.norm(normalized, axis=2, keepdims=True)
+    mask = norm < 1e-6
+    normalized[mask] = 0
+    normalized = normalized / norm
 
 
 
