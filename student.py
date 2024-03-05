@@ -48,7 +48,60 @@ def unproject_corners_impl(K, width, height, depth, Rt):
     Output:
         points -- 2 x 2 x 3 array of 3D positions of the image corners
     """
-    raise NotImplementedError()
+    
+    Rt_inv = np.pad(Rt, [(0, 1), (0, 0)], mode='constant')
+    print(Rt_inv)
+    Rt_inv[3][3] = 1
+    print(Rt_inv)
+    Rt_inv = np.linalg.inv(Rt_inv)
+    print(Rt_inv)
+    K_inv = np.linalg.inv(K)
+    K_inv *= depth
+    
+    out_corners = np.zeros((2,2,3))
+    
+    out_corners[0,0,0] = 0
+    out_corners[0,0,1] = 0
+    
+    out_corners[1,0,0] = height
+    out_corners[1,0,1] = 0
+    
+    out_corners[0,1,0] = 0
+    out_corners[0,1,1] = width
+    
+    out_corners[1,1,0] = height
+    out_corners[1,1,1] = width
+    
+    for h in range(2):
+        for w in range(2):
+            
+            curr_vec = np.zeros((3))
+            
+            curr_vec[0] = out_corners[h,w,0]
+            curr_vec[1] = out_corners[h,w,1]
+            curr_vec[2] = 1
+            
+            print("input coords", curr_vec)
+
+            curr_vec = np.dot(K_inv, curr_vec)
+            
+            temp_vec = np.zeros((4))
+            temp_vec[0] = curr_vec[0]
+            temp_vec[1] = curr_vec[1]
+            temp_vec[2] = curr_vec[2]
+            temp_vec[3] = 1
+            
+            curr_vec = np.dot(Rt_inv, temp_vec)
+            
+            curr_vec /= curr_vec[3]
+            
+            print("output coords", curr_vec)
+            
+            out_corners[h,w,0] = curr_vec[0]
+            out_corners[h,w,1] = curr_vec[1]
+            out_corners[h,w,2] = curr_vec[1]
+            
+    return out_corners
 
 def preprocess_ncc_impl(image, ncc_size):
     """
