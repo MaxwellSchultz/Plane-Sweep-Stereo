@@ -14,7 +14,26 @@ def project_impl(K, Rt, points):
     Output:
         projections -- height x width x 2 array of 2D projections
     """
-    raise NotImplementedError()
+    
+    height =  points.shape[0]
+    width =  points.shape[1]
+    
+    out_img = np.zeros((height,width,2))
+
+    for h in range(height):
+        for w in range(width):
+            in_vec = np.zeros((4))
+            in_vec[0] = points[h,w,0]
+            in_vec[1] = points[h,w,1]
+            in_vec[2] = points[h,w,2]
+            in_vec[3] = 1
+            ext_point = np.dot(Rt,in_vec)
+            int_point = np.dot(K,ext_point)
+            int_point /= int_point[2]
+            out_img[h,w,0] =  int_point[0]
+            out_img[h,w,1] =  int_point[1]
+            
+    return out_img
 
 def unproject_corners_impl(K, width, height, depth, Rt):
     """
