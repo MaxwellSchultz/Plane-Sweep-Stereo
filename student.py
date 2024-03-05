@@ -63,14 +63,14 @@ def unproject_corners_impl(K, width, height, depth, Rt):
     out_corners[0,0,0] = 0
     out_corners[0,0,1] = 0
     
-    out_corners[1,0,0] = height
-    out_corners[1,0,1] = 0
+    out_corners[1,0,0] = 0
+    out_corners[1,0,1] = height - 1
     
-    out_corners[0,1,0] = 0
-    out_corners[0,1,1] = width
+    out_corners[0,1,0] = width - 1
+    out_corners[0,1,1] = 0
     
-    out_corners[1,1,0] = height
-    out_corners[1,1,1] = width
+    out_corners[1,1,0] = width - 1
+    out_corners[1,1,1] = height - 1
     
     for h in range(2):
         for w in range(2):
@@ -188,7 +188,8 @@ def preprocess_ncc_impl(image, ncc_size):
     mask = norm < 1e-6
     normalized[mask] = 0
     normalized = normalized / norm
-
+    
+    return normalized
 
 
 def compute_ncc_impl(image1, image2):
