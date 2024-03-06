@@ -50,11 +50,11 @@ def unproject_corners_impl(K, width, height, depth, Rt):
     """
     
     Rt_inv = np.pad(Rt, [(0, 1), (0, 0)], mode='constant')
-    print(Rt_inv)
+    # print(Rt_inv)
     Rt_inv[3][3] = 1
-    print(Rt_inv)
+    # print(Rt_inv)
     Rt_inv = np.linalg.inv(Rt_inv)
-    print(Rt_inv)
+    # print(Rt_inv)
     K_inv = np.linalg.inv(K)
     K_inv *= depth
     
@@ -81,7 +81,7 @@ def unproject_corners_impl(K, width, height, depth, Rt):
             curr_vec[1] = out_corners[h,w,1]
             curr_vec[2] = 1
             
-            print("input coords", curr_vec)
+            # print("input coords", curr_vec)
 
             curr_vec = np.dot(K_inv, curr_vec)
             
@@ -95,7 +95,7 @@ def unproject_corners_impl(K, width, height, depth, Rt):
             
             curr_vec /= curr_vec[3]
             
-            print("output coords", curr_vec)
+            # print("output coords", curr_vec)
             
             out_corners[h,w,0] = curr_vec[0]
             out_corners[h,w,1] = curr_vec[1]
@@ -185,9 +185,18 @@ def preprocess_ncc_impl(image, ncc_size):
     normalized = normalized - np.mean(normalized, axis=3, keepdims=True)
     normalized = normalized.reshape(h, w, -1)
     norm = np.linalg.norm(normalized, axis=2, keepdims=True)
-    mask = norm < 1e-6
-    normalized[mask] = 0
+    norm[norm == 0] = 1
+    # print(norm)
+    mask = norm >= 1e-6
+    # print(mask)
+    mask[:k,:] = False
+    mask[-k:,:] = False
+    mask[:,:k] = False
+    mask[:,-k:] = False
+    # print(mask)
+    normalized = normalized * mask
     normalized = normalized / norm
+    # print(normalized)
     
     return normalized
 
@@ -202,6 +211,20 @@ def compute_ncc_impl(image1, image2):
         image2 -- height x width x (channels * ncc_size**2) array
     Output:
         ncc -- height x width normalized cross correlation between image1 and
-               image2.
+                image2.
     """
-    raise NotImplementedError()
+    h, w, c = image1.shape[:3]
+    ncc_size = int(np.sqrt(image1.shape[2] // c))
+    image1 = image1.reshape((h, w, c, ncc_size, ncc_size))
+    image2 = image2.reshape((h, w, c, ncc_size, ncc_size))
+
+    numerator = np.sum(image1 * image2, axis=(2, 3, 4))
+    denominator = np.sqrt(np.sum(image1**2, axis=(2, 3, 4)) * np.sum(image2**2, axis=(2, 3, 4)))
+
+    denominator[denominator == 0] = 1
+
+    ncc = numerator / denominator
+
+    return ncc
+    
+    
